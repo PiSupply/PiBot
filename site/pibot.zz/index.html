@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<title> PiBot </title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+<table  width="100%" border = "1px">
+	<tr>
+		<td colspan="2" align="center">
+			<video autoplay="autoplay" width="640" height="480">
+			<source src="http://localhost:8090/0.webm" type="video/webm" align="center">
+			</video>
+		</td>
+	</tr>
+		<tr align = "center">
+		<td colspan="2">
+		<input type="button" id="start" value="Up" />
+		</td>
+	</tr>
+	<tr>
+		<td align = "right"  width="50%">
+		<input type="button" id="start" value="Left" />
+		</td>
+		<td aling = "right"  width="50%">
+		<input type="button" id="start" value="Right" />
+		</td>
+	</tr>
+		<tr align = "center">
+		<td colspan="2">
+		<input type="button" id="start" value="Down" />
+		</td>
+	</tr>
+</table>
+<script src="js.js" type="text/javascript"></script>
+<script>
+    $(
+        function()
+        {
+            // При нажатии на кнопку "Старт"
+            $("#start").click
+            (
+                function()
+                {
+                    $.get("start.php", {}, function(data){ alert("Запрос успешно отправлен"); });
+                }
+            );
+        }
+    );
+</script>
+
+</body>
+</html>
