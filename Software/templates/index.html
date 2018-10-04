@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+    {% block content %}
+
+
+<script type=text/javascript>
+        $(function() {
+            $('a#move_left').bind('click', function() {
+                $.get('/move?id=left',
+                    function(data) {
+                  //do nothing
+                });
+                return false;
+            });
+            $('a#move_up').bind('click', function() {
+                $.get('/move?id=up',
+                    function(data) {
+                  //do nothing
+                });
+                return false;
+            });
+
+            $('a#move_right').bind('click', function() {
+                $.get('/move?id=right',
+                    function(data) {
+                  //do nothing
+                });
+                return false;
+            });
+            $('a#move_down').bind('click', function() {
+                $.get('/move?id=down',
+                    function(data) {
+                  //do nothing
+                });
+                return false;
+            });
+        });
+</script>
+
+
+<div class='container'>
+    <h3>Moving</h3>
+
+    <video autoplay="autoplay" align="center" width="640" height="480">
+			<source src="http://localhost:8090/0.webm" type="video/webm" align="center">
+</video>
+        <form align="center">
+            <a href=# id=move_up><button class='btn btn-default'>Up</button></a>
+            <a href=# id=move_left><button class='btn btn-default'>Left</button></a>
+            <a href=# id=move_right><button class='btn btn-default'>Right</button></a>
+            <a href=# id=move_down><button class='btn btn-default'>Down</button></a>
+        </form>
+
+</div>
+    {% endblock %}
