@@ -41,9 +41,8 @@
 <div class='container'>
     <h3>Moving</h3>
 
-    <video autoplay="autoplay" align="center" width="640" height="480">
-			<source src="http://localhost:8090/0.webm" type="video/webm" align="center">
-</video>
+    <img id="bg" src="{{ url_for('video_feed') }}"  >
+
         <form align="center">
             <a href=# id=move_up><button class='btn btn-default'>Up</button></a>
             <a href=# id=move_left><button class='btn btn-default'>Left</button></a>
