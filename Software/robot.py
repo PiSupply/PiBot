@@ -4,9 +4,6 @@ import json
 import websockets
 import ssl
 import time
-
-#import Adafruit_CharLCD as LCD
-
 import gi
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GObject
@@ -66,81 +63,6 @@ class RobotCamera(object):
         return self.COMMANDS
 
 
-# class RobotJoystick(object):
-#     COMMANDS = ['move', 'start', 'end']
-#     MINTIME = 0.1
-#
-#     def __init__(self):
-#         # Raspberry Pi pin configuration:
-#         lcd_rs = 25
-#         lcd_en = 24
-#         lcd_d4 = 23
-#         lcd_d5 = 17
-#         lcd_d6 = 27
-#         lcd_d7 = 22
-#         lcd_columns = 16
-#         lcd_rows = 2
-#         lcd_backlight = 4
-#         DEGREE = 1
-#         BAR_1 = 2
-#         BAR_2 = 3
-#         BAR_3 = 4
-#         BAR_4 = 5
-#         BAR_5 = 6
-#
-#         self.lcd = LCD.Adafruit_CharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7,
-#                                         lcd_columns, lcd_rows, lcd_backlight)
-#         self.lcd.clear()
-#         self.lcd.set_cursor(0, 0)
-#         self.lcd.create_char(
-#             DEGREE, [0x0c, 0x12, 0x12, 0x0c, 0x00, 0x00, 0x00, 0x00])
-#         self.lcd.create_char(
-#             BAR_1, [0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10, 0x10])
-#         self.lcd.create_char(
-#             BAR_2, [0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18])
-#         self.lcd.create_char(
-#             BAR_3, [0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c, 0x1c])
-#         self.lcd.create_char(
-#             BAR_4, [0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e, 0x1e])
-#         self.lcd.create_char(
-#             BAR_5, [0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f, 0x1f])
-#
-#         self.lcd.set_cursor(0, 0)
-#         self.lcd.message('Raspberry Pi 3b+\nGreatfruit, LLC.')
-#         time.sleep(2)
-#         self.lcd.show_cursor(True)
-#         self.lcd.clear()
-#         self.t = time.monotonic()
-#
-#     def display(self, force, angle):
-#         self.lcd.set_cursor(6, 0)
-#         self.lcd.message('{}\x01  '.format(int(angle)))
-#
-#         f = int(16.0 * 5.0 * force)
-#         f = f if f < 16*5 else 16*5
-#         r = f % 5
-#         n = f // 5
-#         # print('{} {}+{}'.format(f, n, r))
-#         self.lcd.set_cursor(0, 1)
-#         c = ' ' if r == 0 else chr(r+1)
-#         s = ''.join(['\x06']*n) + c
-#         l = len(s)
-#         if l < 16:
-#             s += ''.join([' ']*(16-l))
-#         self.lcd.message(s)
-#
-#     def handle(self, cmd, obj):
-#         if cmd == 'move':
-#             t1 = time.monotonic()
-#             if t1 - self.t > self.MINTIME:
-#                 self.display(obj['force'], obj['degree'])
-#                 self.t = t1
-#         elif cmd == 'end':
-#             self.display(0.0, 0.0)
-#
-#     @property
-#     def commands(self):
-#         return self.COMMANDS
 
 
 class RobotWebsocketServer(object):
@@ -164,11 +86,8 @@ class RobotWebsocketServer(object):
             msg = yield from websocket.recv()
             obj = json.loads(msg)
             cmd = obj['cmd']
-            # print("< {}".format(obj))
             if cmd == 'hello':
                 print('client connected')
-            #elif cmd in self.joystick.commands:
-                #self.joystick.handle(cmd, obj)
             elif cmd in self.camera.commands:
                 self.camera.handle(cmd, obj)
             else:
@@ -176,6 +95,5 @@ class RobotWebsocketServer(object):
 
 
 c = RobotCamera()
-#j = RobotJoystick()
-srv = RobotWebsocketServer(c)
+srv = RobotWebsocketServer(None, c)
 srv.run()
