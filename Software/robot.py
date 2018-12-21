@@ -11,29 +11,29 @@ from gi.repository import Gst, GObject
 
 class RobotCamera(object):
     COMMANDS = ['resolution', 'bitrate']
-    HOST = "10.13.37.140"
     LOCALHOST = '127.0.0.1'
     VIDEO_RTP_PORT = 8004
     AUDIO_RTP_PORT = 8006
     AUDIO_RTP_IN_PORT = 8200
-    W = 1920
-    H = 1080
+    W = 1280
+    H = 720
+    JPEG_CAPS = 'image/jpeg, width={W}, height={H}, framerate=(fraction)30/1'
     CAPS = 'video/x-h264, width={W}, height={H}, framerate=(fraction)30/1, profile=(string)baseline'
     PIPELINE = '''
-      sudo 
-      alsasrc  device=hw:0,0! queue leaky=2 ! audioconvert ! audio/x-raw, rate=48000, channels=2 ! opusenc bitrate=128000 inband-fec=true frame-size=10 ! opusparse ! rtpopuspay pt=111 perfect-rtptime=true min-ptime=10 seqnum-offset=0 timestamp-offset=0 ! udpsink host={LOCALHOST} port={AUDIO_RTP_PORT} sync=false async=false
-      udpsrc port={AUDIO_RTP_IN_PORT} ! application/x-rtp,media=audio,payload=111,encoding-name=OPUS ! queue leaky=2 ! rtpopusdepay ! opusparse ! opusdec ! alsasink device=hw:0,0
+      v4l2src device=/dev/video0 ! {JPEG_CAPS} ! jpegdec ! avenc_h264_omx bitrate=10000000 rtp-payload-size=10 gop-size=4 ! {CAPS} ! queue leaky=2 ! h264parse ! rtph264pay config-interval=1 pt=96  perfect-rtptime=true min-ptime=10 seqnum-offset=0 timestamp-offset=0 ! tee name=t ! udpsink host={LOCALHOST} port={VIDEO_RTP_PORT} buffer-size=32768 sync=false async=false
+      alsasrc  device=hw:2,0 ! queue leaky=2 ! audioconvert ! audio/x-raw, rate=48000, channels=2 ! opusenc bitrate=128000 inband-fec=true frame-size=10 ! opusparse ! rtpopuspay pt=111 perfect-rtptime=true min-ptime=10 seqnum-offset=0 timestamp-offset=0 ! udpsink host={LOCALHOST} port={AUDIO_RTP_PORT} sync=false async=false
+      udpsrc port={AUDIO_RTP_IN_PORT} ! application/x-rtp,media=audio,payload=111,encoding-name=OPUS ! queue leaky=2 ! rtpopusdepay ! opusparse ! opusdec ! alsasink device=hw:2,0
     '''
 
     def __init__(self):
         Gst.init(None)
         GObject.threads_init()
         self.pipe = Gst.parse_launch(self.PIPELINE.format(
-            HOST=self.HOST,
             LOCALHOST=self.LOCALHOST,
             VIDEO_RTP_PORT=self.VIDEO_RTP_PORT,
             AUDIO_RTP_PORT=self.AUDIO_RTP_PORT,
             CAPS=self.CAPS,
+            JPEG_CAPS=self.JPEG_CAPS,
             AUDIO_RTP_IN_PORT=self.AUDIO_RTP_IN_PORT).format(W=self.W, H=self.H)
         )
         r = self.pipe.set_state(Gst.State.PLAYING)
@@ -53,6 +53,8 @@ class RobotCamera(object):
                                Gst.Structure.from_string('c,video_bitrate={}'.format(kb*1000))[0])
 
     def handle(self, cmd, obj):
+        # FIXME ilya: doesn't work properly
+        return
         if cmd == 'resolution':
             self.set_v4l_size(obj['width'], obj['height'])
         elif cmd == 'bitrate':
@@ -61,8 +63,6 @@ class RobotCamera(object):
     @property
     def commands(self):
         return self.COMMANDS
-
-
 
 
 class RobotWebsocketServer(object):
@@ -74,6 +74,7 @@ class RobotWebsocketServer(object):
             './ssl/device.crt', './ssl/device.key')
         self.start_server = websockets.serve(
             self.handle_ws, '0.0.0.0', self.PORT, ssl=self.ssl_context)
+        self.joystick = joystick
         self.camera = camera
 
     def run(self):
@@ -92,6 +93,7 @@ class RobotWebsocketServer(object):
                 self.camera.handle(cmd, obj)
             else:
                 print(obj)
+
 
 
 c = RobotCamera()
