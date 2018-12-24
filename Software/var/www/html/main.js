@@ -3,6 +3,7 @@ var joystick = null;
 var reconnectTimeout = 0;
 const RECONNECT_TIMEOUT = 1000, RESIZE_TIMEOUT = 100;
 const DW = 21, DH = 16;
+const WEBRTC = true;
 const MAXW = 1638, MAXH = 1248, MINW = 48, MINH = 36;
 var FIT_MODE = 'fill'; //'fit_height', 'fit_both', 'fit_width';
 var DR = 1;
@@ -13,6 +14,13 @@ const DRs={quality_low: 0.3, quality_med: 0.5, quality_hi: 1};
 $(document).on('click', '#settings-button-dropdown .dropdown-menu', function (e) {
   e.stopPropagation();
 });
+webrtc = $('#myVideo')[0];
+webrtc.onplaying =  () => {
+	toggleLoading(false);
+	resizeVideo();
+// 	displayStatus();
+	videoSetTransform(0,0);
+}					
 
 function connectJoystick() {
 	try {
@@ -52,7 +60,7 @@ function connectJoystick() {
 				force: data.force / 4.0
 			}))
 		})
-
+		
 		joystick = nipplejs.create({
 			zone: document.getElementById('joystick2'),
 			mode: 'static',
@@ -73,6 +81,7 @@ function connectJoystick() {
 			}))
 		})
 
+
 	}
 	ws.onmessage = (msg) => {
 		console.log(msg);
@@ -90,7 +99,8 @@ function connectJoystick() {
 			reconnectTimeout = setTimeout(connectJoystick, RECONNECT_TIMEOUT);
 	}
 }
-connectJoystick();
+if(WEBRTC)
+	connectJoystick();
 
 var streaming;
 
@@ -188,8 +198,8 @@ function displayStatus() {
 
 function resizeVideo() {
 	let main = webrtc.parentElement;
-    let w = main.clientWidth*DR;
-    let h = main.clientHeight*DR;
+    let w = document.documentElement.clientWidth*DR;
+    let h = document.documentElement.clientHeight*DR;
     let newW, newH;
     console.log(`${w}x${h}`);
     
@@ -250,7 +260,8 @@ function resizeVideo() {
     }
     newW = W, newH = H;
 
-	ws.send(JSON.stringify({cmd: 'resolution', width: newW, height: newH}));
+	if(ws)
+		ws.send(JSON.stringify({cmd: 'resolution', width: newW, height: newH}));
 	videoSetTransform(0,0);
 }
 
@@ -270,6 +281,7 @@ const SERVER = server = "//" + window.location.hostname + "/janus",
 	  STREAM_ID = 1,
 	  opaqueId = "streamingtest-"+Janus.randomString(12);
 
+if(WEBRTC)
 Janus.init({debug: "warn", callback: function() {
 	console.log('Janus inited');
 
@@ -291,14 +303,7 @@ Janus.init({debug: "warn", callback: function() {
 				opaqueId: opaqueId,
 				success: function(pluginHandle) {
 					console.log('Janus plugin attached');
-
-					webrtc = $('#myVideo')[0];
-					webrtc.onplaying =  () => {
-						toggleLoading(false);
-						resizeVideo();
-						displayStatus();
-						videoSetTransform(0,0);
-					}					
+										
 
 					navigator.mediaDevices.enumerateDevices().then(function(devices) {
 						for(let d of devices) {
@@ -357,7 +362,7 @@ Janus.init({debug: "warn", callback: function() {
 // 								$('#watch').html("Stop").removeAttr('disabled').click(stopStream);
 							},
 							error: function(error) {
-								Janus.error("WebRTC error:", error);
+								console.error("WebRTC error:", error);
 								showMessage("WebRTC error... " + error);
 							}
 						});
@@ -390,36 +395,43 @@ Janus.init({debug: "warn", callback: function() {
 var X=0, Y=0, tX=0, tY=0;
 function videoMouseDown(el, ev) {
 // 	console.log(el, ev);
-	X = ev.x - tX;
-	Y = ev.y - tY;
+	let x = ev.touches? ev.touches[0].pageX: ev.pageX,
+		y = ev.touches? ev.touches[0].pageY: ev.pageY;
+	X = x - tX;
+	Y = y - tY;
 }
 
-function videoMouseMove(el, ev) {
-	if(ev.buttons == 1) {
-		let dx = ev.x - X, dy = ev.y - Y;
-		console.debug(el, dx);	
+function videoMouseMove(el, ev) {	
+	if(!((ev.type == 'mousemove' && ev.buttons == 1) || ev.type == 'touchmove'))
+		return;
 
-		rect = webrtc.getBoundingClientRect(),
-			W = webrtc.parentElement.clientWidth,
-			H = webrtc.parentElement.clientHeight;
+	ev.preventDefault();
 
-		maxX = (webrtc.getBoundingClientRect().width-W)/2;
-		maxY = (webrtc.getBoundingClientRect().height-H)/2;
-		if(maxX >= 0) {
-			if(dx > 0 && dx > maxX)
-				dx = maxX;		
-			else if(dx < 0 && dx < -maxX)
-				dx = -maxX;
-		}
-		if(maxY >= 0) {
-			if(dy > 0 && dy > maxY)
-				dy = maxY;
-			else if(dy < 0 && dy < -maxY)
-				dy = -maxY;
-		}
-		if(maxX >= 0 && maxY >= 0)
-			videoSetTransform(dx, dy);
+	let x = ev.touches? ev.touches[0].pageX: ev.pageX,
+		y = ev.touches? ev.touches[0].pageY: ev.pageY,
+		dx = x - X, dy = y - Y;
+	console.debug(el, dx);	
+
+	rect = webrtc.getBoundingClientRect(),
+		W = document.documentElement.clientWidth,
+		H = document.documentElement.clientHeight;
+
+	maxX = (webrtc.getBoundingClientRect().width-W)/2;
+	maxY = (webrtc.getBoundingClientRect().height-H)/2;
+	if(maxX >= 0) {
+		if(dx > 0 && dx > maxX)
+			dx = maxX;		
+		else if(dx < 0 && dx < -maxX)
+			dx = -maxX;
 	}
+	if(maxY >= 0) {
+		if(dy > 0 && dy > maxY)
+			dy = maxY;
+		else if(dy < 0 && dy < -maxY)
+			dy = -maxY;
+	}
+	if(maxX >= 0 && maxY >= 0)
+		videoSetTransform(dx, dy);	
 }
 
 SCALE = 1.0;

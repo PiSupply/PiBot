@@ -68,7 +68,7 @@ class RobotCamera(object):
 class RobotWebsocketServer(object):
     PORT = 8766
 
-    def __init__(self, camera):
+    def __init__(self, joystick, camera):
         self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         self.ssl_context.load_cert_chain(
             './ssl/device.crt', './ssl/device.key')
@@ -89,11 +89,12 @@ class RobotWebsocketServer(object):
             cmd = obj['cmd']
             if cmd == 'hello':
                 print('client connected')
+            elif self.joystick and cmd in self.joystick.commands:
+                self.joystick.handle(cmd, obj)
             elif cmd in self.camera.commands:
                 self.camera.handle(cmd, obj)
             else:
                 print(obj)
-
 
 
 c = RobotCamera()

@@ -16,14 +16,17 @@
     <body id="myBody">
         <video autoplay muted playsinline loop id="myVideo"
             onmousedown="videoMouseDown(this, event)"
-            onmousemove="videoMouseMove(this, event)">            
+            onmousemove="videoMouseMove(this, event)"
+            ontouchstart="videoMouseDown(this, event)"
+            ontouchmove="videoMouseMove(this, event)" >            
             Your browser does not support HTML5 video.
+<!--             <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"> -->
         </video>
         <div class="inline-div" id="fullscreen-button-div"></div>
         <div id='joystick'></div>
         <div id='joystick2'></div>
         <div class="btn-group dropup inline-div" id="settings-button-dropdown">            
-            <div id="settings-button-div" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
+            <!--<div id="settings-button-div" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></div>
             <div class="dropdown-menu">
                 <form class="px-1 py-4">
                     <div class="form-group">
@@ -44,7 +47,7 @@
                         </select>
                     </div>
                 </form>
-            </div>
+            </div>-->
         </div>
 
         <div class="inline-div" id="mic-button-div"></div>
