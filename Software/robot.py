@@ -63,6 +63,15 @@ class RobotCamera(object):
     @property
     def commands(self):
         return self.COMMANDS
+    
+        
+class Motion(object):
+
+    def motionCamera(degree):
+        print(degree)
+            
+    def motionVehicle(degree):
+        print(degree)
 
 
 class RobotWebsocketServer(object):
@@ -93,8 +102,14 @@ class RobotWebsocketServer(object):
                 self.joystick.handle(cmd, obj)
             elif cmd in self.camera.commands:
                 self.camera.handle(cmd, obj)
+            elif cmd == 'move':
+                #print(1)
+                Motion.motionCamera(obj['degree'])
+            elif cmd == 'move2':
+                #print(2)
+                Motion.motionVehicle(obj['degree'])
             else:
-                print(obj)
+                print(obj['cmd'])
 
 
 c = RobotCamera()
