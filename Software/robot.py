@@ -5,6 +5,7 @@ import websockets
 import ssl
 import time
 import gi
+import pibot
 gi.require_version('Gst', '1.0')
 from gi.repository import Gst, GObject
 
@@ -66,12 +67,53 @@ class RobotCamera(object):
     
         
 class Motion(object):
+	
+    def __init__(self):
+        self.robot = pibot.PiBot()
+        self.robot.InitMotorDriver(pibot.DRIVER_M_1_2)
+        self.robot.Enable()
+        self.stopVehicle()
+        print("initialized")
+        
+    def stopVehicle(self):
+        self.robot.SetMotorDrive(pibot.M1,0)
+        self.robot.SetMotorDrive(pibot.M2,0)
+        
 
-    def motionCamera(degree):
+
+    def motionCamera(self, degree):
         print(degree)
             
-    def motionVehicle(degree):
-        print(degree)
+    def motionVehicle(self, angle, force):
+        
+        if force > 1.0:
+            force = 1.0
+        if angle == 360:
+            angle = 0
+
+        m1 = force
+        m2 = force - (force*2)*(angle%90)/90.
+        if 0 <= angle < 90:
+            M1 = m1
+            M2 = m2
+        elif 90 <= angle < 180:
+            M1 = m2            
+            M2 = -m1
+        elif 180 <= angle < 270:
+            M1 = -m1
+            M2 = -m2
+        elif 270 <= angle < 360:
+            M1 = -m2
+            M2 = m1
+            
+
+
+        M1 = round(M1*255)
+        M2 = round(M2*255)
+        print('{} {} -> {} {}'.format(force, angle, M1, M2))
+        self.robot.SetMotorDrive(pibot.M1, M1)
+        self.robot.SetMotorDrive(pibot.M2, M2)
+
 
 
 class RobotWebsocketServer(object):
@@ -85,6 +127,7 @@ class RobotWebsocketServer(object):
             self.handle_ws, '0.0.0.0', self.PORT, ssl=self.ssl_context)
         self.joystick = joystick
         self.camera = camera
+        self.motion = Motion()
 
     def run(self):
         asyncio.get_event_loop().run_until_complete(self.start_server)
@@ -102,12 +145,12 @@ class RobotWebsocketServer(object):
                 self.joystick.handle(cmd, obj)
             elif cmd in self.camera.commands:
                 self.camera.handle(cmd, obj)
-            elif cmd == 'move':
-                #print(1)
-                Motion.motionCamera(obj['degree'])
             elif cmd == 'move2':
-                #print(2)
-                Motion.motionVehicle(obj['degree'])
+                self.motion.motionCamera(obj['degree'])
+            elif cmd == 'move':
+                self.motion.motionVehicle(obj['degree'], obj['force'])
+            elif cmd == 'end':
+                self.motion.stopVehicle()
             else:
                 print(obj['cmd'])
 
