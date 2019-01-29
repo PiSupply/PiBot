@@ -25,7 +25,7 @@ class RobotCamera(object):
       alsasrc  device=hw:2,0 ! queue leaky=2 ! audioconvert ! audio/x-raw, rate=48000, channels=2 ! opusenc bitrate=128000 inband-fec=true frame-size=10 ! opusparse ! rtpopuspay pt=111 perfect-rtptime=true min-ptime=10 seqnum-offset=0 timestamp-offset=0 ! udpsink host={LOCALHOST} port={AUDIO_RTP_PORT} sync=false async=false
       udpsrc port={AUDIO_RTP_IN_PORT} ! application/x-rtp,media=audio,payload=111,encoding-name=OPUS ! queue leaky=2 ! rtpopusdepay ! opusparse ! opusdec ! alsasink device=hw:2,0
     '''
-
+    
     def __init__(self):
         Gst.init(None)
         GObject.threads_init()
@@ -64,6 +64,59 @@ class RobotCamera(object):
     @property
     def commands(self):
         return self.COMMANDS
+    
+
+class CameraMotion(object):
+    def __init__(self):
+        self.robot = pibot.PiBot()
+        self.robot.Enable()
+        self.currentAngleX = 90; 
+        self.currentAngleY = 90;
+        self.defaultPosition(self.currentAngleX,self.currentAngleY)
+        
+    def defaultPosition(self, X,Y):
+        self.robot.SetServoControl(14,int(self.angleConversion(X)))
+        self.robot.SetServoControl(16,int(self.angleConversion(Y)))
+	
+    def angleConversion(self,angle):
+        tMin = 102
+        tMax = 511
+        t = (angle/180)*(tMax-tMin)+tMin
+        return t*20000/4096
+  	
+    def limiterAngle(self,angle):
+        lowerLimit=45
+        upperLimit=135
+        if lowerLimit >= angle:
+            angle = lowerLimit
+            return angle
+        elif upperLimit <= angle:
+            angle = upperLimit
+            return angle
+        else:
+            return angle    
+
+
+    def motionCamera(self,angle,force):
+        maxShiftPerStep = 10
+        if 45 <= angle < 135:
+            self.currentAngleY = self.currentAngleY + maxShiftPerStep*force
+            self.currentAngleY = self.limiterAngle(self.currentAngleY)
+            self.robot.SetServoControl(14,int(self.angleConversion(self.currentAngleY)))
+        elif 135 <= angle < 225:
+            self.currentAngleX = self.currentAngleX - maxShiftPerStep*force
+            self.currentAngleX = self.limiterAngle(self.currentAngleX)
+            self.robot.SetServoControl(16,int(self.angleConversion(self.currentAngleX)))
+        elif 225 <= angle < 315:
+            self.currentAngleY = self.currentAngleY - maxShiftPerStep*force
+            self.currentAngleY = self.limiterAngle(self.currentAngleY)
+            self.robot.SetServoControl(14,int(self.angleConversion(self.currentAngleY)))
+        else:
+            self.currentAngleX = self.currentAngleX + maxShiftPerStep*force
+            self.currentAngleX = self.limiterAngle(self.currentAngleX)
+            self.robot.SetServoControl(16,int(self.angleConversion(self.currentAngleX)))
+            
+        print('X:{} Y:{}'.format(int(self.currentAngleX),int(self.currentAngleY)))
     
         
 class Motion(object):
@@ -128,6 +181,7 @@ class RobotWebsocketServer(object):
         self.joystick = joystick
         self.camera = camera
         self.motion = Motion()
+        self.cameraMotion = CameraMotion()
 
     def run(self):
         asyncio.get_event_loop().run_until_complete(self.start_server)
@@ -146,7 +200,7 @@ class RobotWebsocketServer(object):
             elif cmd in self.camera.commands:
                 self.camera.handle(cmd, obj)
             elif cmd == 'move2':
-                self.motion.motionCamera(obj['degree'])
+                self.cameraMotion.motionCamera(obj['degree'], obj['force'])
             elif cmd == 'move':
                 self.motion.motionVehicle(obj['degree'], obj['force'])
             elif cmd == 'end':
