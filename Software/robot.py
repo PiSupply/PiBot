@@ -22,9 +22,10 @@ class RobotCamera(object):
     CAPS = 'video/x-h264, width={W}, height={H}, framerate=(fraction)30/1, profile=(string)baseline'
     PIPELINE = '''
       v4l2src device=/dev/video0 ! {JPEG_CAPS} ! jpegdec ! avenc_h264_omx bitrate=10000000 rtp-payload-size=10 gop-size=4 ! {CAPS} ! queue leaky=2 ! h264parse ! rtph264pay config-interval=1 pt=96  perfect-rtptime=true min-ptime=10 seqnum-offset=0 timestamp-offset=0 ! tee name=t ! udpsink host={LOCALHOST} port={VIDEO_RTP_PORT} buffer-size=32768 sync=false async=false
-      alsasrc  device=hw:2,0 ! queue leaky=2 ! audioconvert ! audio/x-raw, rate=48000, channels=2 ! opusenc bitrate=128000 inband-fec=true frame-size=10 ! opusparse ! rtpopuspay pt=111 perfect-rtptime=true min-ptime=10 seqnum-offset=0 timestamp-offset=0 ! udpsink host={LOCALHOST} port={AUDIO_RTP_PORT} sync=false async=false
-      udpsrc port={AUDIO_RTP_IN_PORT} ! application/x-rtp,media=audio,payload=111,encoding-name=OPUS ! queue leaky=2 ! rtpopusdepay ! opusparse ! opusdec ! alsasink device=hw:2,0
+      alsasrc  device=hw:1,0 ! queue leaky=2 ! audioconvert ! audio/x-raw, rate=48000, channels=2 ! opusenc bitrate=128000 inband-fec=true frame-size=10 ! opusparse ! rtpopuspay pt=111 perfect-rtptime=true min-ptime=10 seqnum-offset=0 timestamp-offset=0 ! udpsink host={LOCALHOST} port={AUDIO_RTP_PORT} sync=false async=false
+      udpsrc port={AUDIO_RTP_IN_PORT} ! application/x-rtp,media=audio,payload=111,encoding-name=OPUS ! queue leaky=2 ! rtpopusdepay ! opusparse ! opusdec ! alsasink device=hw:1,0
     '''
+    
     
     def __init__(self):
         Gst.init(None)
@@ -54,7 +55,6 @@ class RobotCamera(object):
                                Gst.Structure.from_string('c,video_bitrate={}'.format(kb*1000))[0])
 
     def handle(self, cmd, obj):
-        # FIXME ilya: doesn't work properly
         return
         if cmd == 'resolution':
             self.set_v4l_size(obj['width'], obj['height'])
@@ -65,10 +65,17 @@ class RobotCamera(object):
     def commands(self):
         return self.COMMANDS
     
-
-class CameraMotion(object):
+  
+class Robot():
     def __init__(self):
         self.robot = pibot.PiBot()
+        self.motion = Motion(self.robot)
+        self.cameraMotion = CameraMotion(self.robot)
+    
+
+class CameraMotion(object):
+    def __init__(self,robot):
+        self.robot = robot
         self.robot.Enable()
         self.currentAngleX = 90; 
         self.currentAngleY = 90;
@@ -102,7 +109,7 @@ class CameraMotion(object):
         if 45 <= angle < 135:
             self.currentAngleY = self.currentAngleY + maxShiftPerStep*force
             self.currentAngleY = self.limiterAngle(self.currentAngleY)
-            self.robot.SetServoControl(14,int(self.angleConversion(self.currentAngleY)))
+            self.robot.SetServoControl(15,int(self.angleConversion(self.currentAngleY)))
         elif 135 <= angle < 225:
             self.currentAngleX = self.currentAngleX - maxShiftPerStep*force
             self.currentAngleX = self.limiterAngle(self.currentAngleX)
@@ -110,19 +117,19 @@ class CameraMotion(object):
         elif 225 <= angle < 315:
             self.currentAngleY = self.currentAngleY - maxShiftPerStep*force
             self.currentAngleY = self.limiterAngle(self.currentAngleY)
-            self.robot.SetServoControl(14,int(self.angleConversion(self.currentAngleY)))
+            self.robot.SetServoControl(15,int(self.angleConversion(self.currentAngleY)))
         else:
             self.currentAngleX = self.currentAngleX + maxShiftPerStep*force
             self.currentAngleX = self.limiterAngle(self.currentAngleX)
             self.robot.SetServoControl(16,int(self.angleConversion(self.currentAngleX)))
             
         print('X:{} Y:{}'.format(int(self.currentAngleX),int(self.currentAngleY)))
-    
-        
+
+
 class Motion(object):
 	
-    def __init__(self):
-        self.robot = pibot.PiBot()
+    def __init__(self,robot):
+        self.robot  = robot
         self.robot.InitMotorDriver(pibot.DRIVER_M_1_2)
         self.robot.Enable()
         self.stopVehicle()
@@ -131,12 +138,7 @@ class Motion(object):
     def stopVehicle(self):
         self.robot.SetMotorDrive(pibot.M1,0)
         self.robot.SetMotorDrive(pibot.M2,0)
-        
 
-
-    def motionCamera(self, degree):
-        print(degree)
-            
     def motionVehicle(self, angle, force):
         
         if force > 1.0:
@@ -158,15 +160,12 @@ class Motion(object):
         elif 270 <= angle < 360:
             M1 = -m2
             M2 = m1
-            
-
 
         M1 = round(M1*255)
         M2 = round(M2*255)
         print('{} {} -> {} {}'.format(force, angle, M1, M2))
         self.robot.SetMotorDrive(pibot.M1, M1)
         self.robot.SetMotorDrive(pibot.M2, M2)
-
 
 
 class RobotWebsocketServer(object):
@@ -180,8 +179,9 @@ class RobotWebsocketServer(object):
             self.handle_ws, '0.0.0.0', self.PORT, ssl=self.ssl_context)
         self.joystick = joystick
         self.camera = camera
-        self.motion = Motion()
-        self.cameraMotion = CameraMotion()
+        self.robot = Robot()
+        #self.motion = self.robot.motion
+        #self.cameraMotion = self.robot.cameraMotion
 
     def run(self):
         asyncio.get_event_loop().run_until_complete(self.start_server)
@@ -200,11 +200,11 @@ class RobotWebsocketServer(object):
             elif cmd in self.camera.commands:
                 self.camera.handle(cmd, obj)
             elif cmd == 'move2':
-                self.cameraMotion.motionCamera(obj['degree'], obj['force'])
+                self.robot.cameraMotion.motionCamera(obj['degree'], obj['force'])
             elif cmd == 'move':
-                self.motion.motionVehicle(obj['degree'], obj['force'])
+                self.robot.motion.motionVehicle(obj['degree'], obj['force'])
             elif cmd == 'end':
-                self.motion.stopVehicle()
+                self.robot.motion.stopVehicle()
             else:
                 print(obj['cmd'])
 
