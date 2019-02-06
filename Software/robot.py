@@ -55,7 +55,6 @@ class RobotCamera(object):
                                Gst.Structure.from_string('c,video_bitrate={}'.format(kb*1000))[0])
 
     def handle(self, cmd, obj):
-        return
         if cmd == 'resolution':
             self.set_v4l_size(obj['width'], obj['height'])
         elif cmd == 'bitrate':
@@ -77,13 +76,16 @@ class CameraMotion(object):
     def __init__(self,robot):
         self.robot = robot
         self.robot.Enable()
-        self.currentAngleX = 90; 
-        self.currentAngleY = 90;
+        self.currentAngleX = 90 #the initial value of the angle axis X;
+        self.currentAngleY = 90 #the initial value of the angle axis Y;
+        self.servoAxisX = 1 #output of the connected servomotor on the axis X;
+        self.servoAxisY = 2 #output of the connected servomotor on the axis X;
         self.defaultPosition(self.currentAngleX,self.currentAngleY)
+
         
     def defaultPosition(self, X,Y):
-        self.robot.SetServoControl(14,int(self.angleConversion(X)))
-        self.robot.SetServoControl(16,int(self.angleConversion(Y)))
+        self.robot.SetServoControl(self.servoAxisX,int(self.angleConversion(X)))
+        self.robot.SetServoControl(self.servoAxisY,int(self.angleConversion(Y)))
 	
     def angleConversion(self,angle):
         tMin = 102
@@ -109,19 +111,19 @@ class CameraMotion(object):
         if 45 <= angle < 135:
             self.currentAngleY = self.currentAngleY + maxShiftPerStep*force
             self.currentAngleY = self.limiterAngle(self.currentAngleY)
-            self.robot.SetServoControl(15,int(self.angleConversion(self.currentAngleY)))
+            self.robot.SetServoControl(self.servoAxisY,int(self.angleConversion(self.currentAngleY)))
         elif 135 <= angle < 225:
             self.currentAngleX = self.currentAngleX - maxShiftPerStep*force
             self.currentAngleX = self.limiterAngle(self.currentAngleX)
-            self.robot.SetServoControl(16,int(self.angleConversion(self.currentAngleX)))
+            self.robot.SetServoControl(self.servoAxisX,int(self.angleConversion(self.currentAngleX)))
         elif 225 <= angle < 315:
             self.currentAngleY = self.currentAngleY - maxShiftPerStep*force
             self.currentAngleY = self.limiterAngle(self.currentAngleY)
-            self.robot.SetServoControl(15,int(self.angleConversion(self.currentAngleY)))
+            self.robot.SetServoControl(self.servoAxisX,int(self.angleConversion(self.currentAngleY)))
         else:
             self.currentAngleX = self.currentAngleX + maxShiftPerStep*force
             self.currentAngleX = self.limiterAngle(self.currentAngleX)
-            self.robot.SetServoControl(16,int(self.angleConversion(self.currentAngleX)))
+            self.robot.SetServoControl(self.servoAxisY,int(self.angleConversion(self.currentAngleX)))
             
         print('X:{} Y:{}'.format(int(self.currentAngleX),int(self.currentAngleY)))
 
