@@ -1,0 +1,23 @@
+/*** Joystick ***/
+/***************/
+div.nipple .back {
+    border-width: 2px;
+    border-color: white;
+    border-style: solid;
+    box-shadow: 0 0 1px 0px white inset, 0 0 1px 0px white;
+}
+div.nipple .front {
+    background: white !important;
+    border-width: 2px;
+    border-color: black;
+    border-style: solid;
+    box-shadow: 0 0 1px 0px white inset, 0 0 1px 0px white;
+}
+
+.joystick {
+    position: fixed;
+    background: rgba(0, 0, 0, 0);
+    width: 100px;
+    padding: 20px;
+    height: 100px;
+}

@@ -1,0 +1,13 @@
+#myVideo {
+    position: relative;
+}
+
+#myVideo.fit_height {
+    height: 100vh;
+}
+
+#myVideo.fit_width {
+    width: 100vw;
+    transform: translateY(-50%);
+    top: 50%;
+}

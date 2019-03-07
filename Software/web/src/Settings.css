@@ -1,0 +1,12 @@
+.dropdown-menu.show {
+    background-color: rgba(152, 152, 152, 0.5);
+    border-radius: 0.5rem;
+}
+
+label {
+    color: white;
+}
+select.form-control {
+    background-color: #4c4c4c !important;
+    color: white !important;
+}

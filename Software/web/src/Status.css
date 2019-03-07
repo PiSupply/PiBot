@@ -1,0 +1,12 @@
+#statusDiv {
+    bottom: 0;
+    right: calc(50% - 7.5em);
+    position: fixed;
+    background: grey;
+    opacity: 0.3;
+    width: 15em;
+    text-align: center;
+}
+#statusDiv span {
+    color: white;
+}
