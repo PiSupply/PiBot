@@ -24,4 +24,4 @@ iwgetid -r
 #fi
 
 # Start your application here.
-python3 robot.py
+./robot.py
