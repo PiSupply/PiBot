@@ -254,7 +254,7 @@ parser.add_argument("--disable-camera", help="Disable camera operation", action=
 parser.add_argument("--disable-joystick", help="Disable joystick opration", action="store_true",
     default=False)
 parser.add_argument("--disable-relay", help="Disable websocket relay", action="store_true",
-    default=False)
+    default=True)
 parser.add_argument("--id", help="ID of this device",
     default='MAGIC')
 parser.add_argument("--width", help="Camera image width",

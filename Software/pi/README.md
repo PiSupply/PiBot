@@ -46,5 +46,5 @@ If you run this script, then the main script will start automatically.
 You may want to set your own SSL certificate / key paths, for this use the arguments `--ssl-cert` `--ssl-key`
 When all dependencies are installed, run in this directory:
 ```bash
-$ ./robot.py --disable-relay
+$ ./robot.py
 ```
