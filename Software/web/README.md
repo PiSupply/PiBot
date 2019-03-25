@@ -17,7 +17,7 @@
     just run script with 2 parameters. First path to ssl.crt and second path to ssl.key
     For example:
     ```bush 
-    # ./nginx.sh ssl/ssl.crt ssl.ssl.key
+    # ./nginx.sh ssl/ssl.crt ssl/ssl.key
     ```
     or manually:
      ```bash 
@@ -25,13 +25,8 @@
     # cp etc/nginx/sites-available/http-redirect /etc/nginx/sites-available/http-redirect
     # ln -s /etc/nginx/sites-available/robot /etc/nginx/sites-enabled/robot
     # ln -s /etc/nginx/sites-available/http-redirect /etc/nginx/sites-enabled/http-redirect
-    # service nginx reload
     ```
-    then open config:
-    ```bash
-    # nano /etc/nginx/sites-available/robot
-    ```
-    and specify the path to the certificate and key, as well as to the build folder compiled earlier. And run:
+     And run:
     ```bash
     # service nginx reload
     ```
