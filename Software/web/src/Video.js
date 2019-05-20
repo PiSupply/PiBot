@@ -19,6 +19,7 @@ const MOBILE = ('ontouchstart' in window );
 export default class Video extends Component {
     state = {fit_width: false, fit_height: true};
 
+    haveAudio = undefined;
     fitMode = 'fill';
     quality = 1.0;
     resizeTm = 0;
@@ -85,7 +86,9 @@ export default class Video extends Component {
 
     playing = (e) => {
         console.log(e);
-        this.props.onStarted();
+        if(this.props.muted)
+            this.mute(true);
+        this.props.onStarted(this.haveAudio);
         this.resize();
     }
 
@@ -113,6 +116,12 @@ export default class Video extends Component {
         })
     }
 
+    componentDidUpdate(prevProps) {
+        if(this.props.muted != prevProps.muted) {
+            this.mute(this.props.muted);
+        }
+    }
+
     async connectWebRTC() {
         if(!this.props.config.janus)
             return;
@@ -125,9 +134,15 @@ export default class Video extends Component {
         console.log('Janus inited');
 
         let showErrorAndReload = async (e) => {
-            console.log(e);
-            await this.props.onError(e);
-            this.connectWebRTC();
+            console.log(e, this.haveAudio);
+            if(e.name == 'NotAllowedError' && this.haveAudio) {
+                this.haveAudio = false;
+            } else if(e == "No capture device found") {
+                return;
+            } else {
+                await this.props.onError(e);
+            }
+            janus.destroy();
         }
         
         if(!Janus.isWebrtcSupported()) {
@@ -139,12 +154,10 @@ export default class Video extends Component {
                 server: me.props.config.janus,
                 success: resolve,
                 error: showErrorAndReload,
-                destroyed: window.location.reload
+                destroyed: () => this.connectWebRTC()
             });
         });
         console.log('Janus connected');
-
-        var haveAudio = false;
 
         let opaqueId = "streamingtest-"+Janus.randomString(12);
         let streaming = await new Promise((resolve, reject) => {
@@ -153,13 +166,16 @@ export default class Video extends Component {
                 opaqueId: opaqueId,
                 success: resolve,
                 error: showErrorAndReload,
-                onmessage: function(msg, jsep) {
+                onmessage: (msg, jsep) => {
                     Janus.debug(" ::: Got a message :::");
                     Janus.debug(msg);
                     let result = msg.result;
                     if(result && result.status) {
                         if(result.status == 'started') {
                             console.log('Streaming started!');
+                            
+                            // FIXME: update MicButton every time.
+                            
                             if(me.video.current.played.length) {
                                 me.playing();
                             }							
@@ -173,7 +189,7 @@ export default class Video extends Component {
         
                         streaming.createAnswer({
                             jsep: jsep,
-                            media: { audioSend: haveAudio, videoSend: false },
+                            media: { audioSend: this.haveAudio, videoSend: false },
                             success: function(jsep) {
                                 Janus.debug("Got SDP!");
                                 Janus.debug(jsep);
@@ -187,7 +203,7 @@ export default class Video extends Component {
                         });
                     }
                 },
-                onremotestream: function(stream) {
+                onremotestream: (stream) => {
                     Janus.debug(" ::: Got a remote stream :::");
                     Janus.debug(stream);
                     console.log('Janus remote stream received');
@@ -195,8 +211,11 @@ export default class Video extends Component {
                     Janus.attachMediaStream(vid, stream);
                     vid.muted = false;
                 },
-                oncleanup: function() {
+                oncleanup: () => {
                     Janus.log(" ::: Got a cleanup notification :::");
+                },
+                slowLink: (u,n) => {
+                    console.warn('slowlink', u, n);
                 }
             })
         });
@@ -204,9 +223,14 @@ export default class Video extends Component {
         console.log('Janus plugin attached');
                                     
         let devices = await navigator.mediaDevices.enumerateDevices();
-        for(let d of devices) {
-            if(d.kind == 'audioinput')
-                haveAudio = true;
+        
+        if(this.haveAudio === undefined) {
+            for(let d of devices) {
+                if(d.kind == 'audioinput')
+                    this.haveAudio = true;
+            }
+            if(this.haveAudio === undefined)
+                this.haveAudio = false;
         }
 
         let result = await new Promise(resolve => streaming.send({
@@ -306,7 +330,7 @@ export default class Video extends Component {
     }
 
     setTransform(dx, dy, scale) {
-        let tr = `translateX(${dx}px) `;
+        let tr = `translateX( calc( ${dx}px - 50% ) )`;
         if(this.state.fit_width)
             tr += `translateY( calc( ${dy}px - 50% ) )`;
         else
@@ -333,6 +357,8 @@ export default class Video extends Component {
     }
     
     mute(b) {
+        if(!this.haveAudio)
+            return;
         console.log('mute', b);
         if(!this.streaming)
             return;

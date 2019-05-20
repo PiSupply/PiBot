@@ -1,0 +1,54 @@
+.mylist {
+  max-width: 400px;
+  max-height: calc(100vh - 5rem);
+}
+@media (max-width: 400px) {
+  .mylist {
+    max-height: unset;
+    max-width: 95vw;
+  }    
+}
+.mylistgroup {
+  overflow-y: scroll;
+  /* -webkit-overflow-scrolling: touch; */
+}
+
+.mylist-compact {
+  max-height: calc(100vh - 5rem);
+  /* TODO: detect mobile keyboard */
+}
+
+
+.mystencil {
+  background: inherit;
+  position: relative;
+  left: 1.2em;
+  top: -100%;
+  height: 100%;
+}
+.mystencil-1 {
+  left: .25em;
+}
+.mystencil-2 {
+  left: .5em;
+}
+.mystencil-3 {
+  left: .75em;
+}
+.mystencil-4 {
+  left: 1em;
+}
+.mystencil-5 {
+  left: 1.2em;
+}
+.mybars {
+  background: white;
+}
+
+.my-bg-inherit {
+  background: inherit;
+}
+
+.mypasswordfield {
+  display: none;
+}
