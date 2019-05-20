@@ -23,8 +23,8 @@
      ```bash 
     # m4 -D SSL_CERT=<ssl_cert> -D SSL_KEY=<ssl_key> -D PWD=<this dir>/build etc/nginx/sites-available/robot > /etc/nginx/sites-available/robot
     # cp etc/nginx/sites-available/http-redirect /etc/nginx/sites-available/http-redirect
+    # cp etc/nginx/sites-available/robot /etc/nginx/sites-available/robot
     # ln -s /etc/nginx/sites-available/robot /etc/nginx/sites-enabled/robot
-    # ln -s /etc/nginx/sites-available/http-redirect /etc/nginx/sites-enabled/http-redirect
     ```
      And run:
     ```bash
@@ -36,4 +36,5 @@
     # rm /etc/nginx/sites-enabled/default
     ```
     `http-redirect` is a dummy site which simply redirects clients from http://HOST to https://HOST. It is not required for proper functioning of the main site (`robot`).
+
 
