@@ -40,11 +40,15 @@ or run script "start-wifi-connect":
 # ./start-wifi-connect
 ```
 If you run this script, then the main script will start automatically.
-### Custom wifi-connection script
+### Wifi-connection script
 ---
 The script is called wifi.py, to run it, you must enter the command:
 ```bash
 # python3 wifi.py
+```
+The address at which the choice of points will be available to connect to the Wi-Fi network we need.
+```
+192.168.42.1
 ```
 This script differs from Balena in that it has the minimum set of functions we need, as well as in the event of an internet connection break, will automatically raise the Wi-Fi point for reconnection.
 ### Script autoconfiguration of network configs
@@ -62,5 +66,7 @@ When all dependencies are installed, run in this directory:
 $ ./robot.py
 ```
 ### PiBot image 
+---
 If you are using a pre-built pibot assembly for raspberry pi, in this case scripts wifi.py, check_internet.py, and robot.py run by default along with the system, their autorun is controlled by systemd services wifi-connect.service, check_internet.service, robot.service. 
 If you want to control one of the service manually, turn off the necessary service.
+
