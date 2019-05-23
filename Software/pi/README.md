@@ -20,28 +20,54 @@ This folder contains configs and scripts only for Raspbian running on Raspberry 
     ```bash
     # apt install gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-tools python-gst-1.0
     ```
+### Certificates
+---
+**Just run the certs.sh script and all certificates will be generated automatically:**
+```bash
+$ ./certs.sh
+```
+**or for manually creating use this instruction:**
+You will need to create certificates for Janus, Nginx and PiBot. You can use the same certificate for PiBot and Nginx.
+To create a certificate, use the command:
+```bash
+openssl req -x509 -nodes -newkey rsa:2048 -days 365 -keyout ssl.key -out ssl.crt
+```
+where ssl.crt and ssl.key path to future certificates. 
+Janus certificates must be in a folder:
+```
+/opt/janus/share/janus/certs/
+```
+and their name device.crt and device.key.
+PiBot certificates must be in the ssl folder. The folder is in the same folder as the robot.py and name of certificates ssl.crt and ssl.key
 
 ### Wifi connection
+#### **Important**
+*Use either balena.io or wifi connect script*
  ###### Install if you need it
  ---
 + Balena.io WiFi Connect:
     Creates an access point on raspberry pi, after connecting to which it will be possible to connect the raspberry to the desired Wi-Fi access point.
     Installation:
-```bash
-# bash <(curl -L https://github.com/balena-io/wifi-connect/raw/master/scripts/raspbian-install.sh)
-```
+    ```bash
+    # bash <(curl -L https://github.com/balena-io/wifi-connect/raw/master/scripts/raspbian-install.sh)
+    ```
 * launch balena.io:
     To run call the command through the terminal:
-```bash
-# wifi-connect
-```
-or run script "start-wifi-connect":
-```bash
-# ./start-wifi-connect
-```
-If you run this script, then the main script will start automatically.
-### Wifi-connection script
+    ```bash
+    # wifi-connect
+    ```
+    or run script "start-wifi-connect":
+    ```bash
+    # ./start-wifi-connect
+    ```
+    **If you run this script, then the main script will start automatically.**
+##### Wifi-connection script
+###### Using if you need it
 ---
+For normal operation you need to install networkmanager
+```bash
+# apt-get install network-manager
+```
 The script is called wifi.py, to run it, you must enter the command:
 ```bash
 # python3 wifi.py
