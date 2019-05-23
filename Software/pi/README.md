@@ -26,7 +26,7 @@ This folder contains configs and scripts only for Raspbian running on Raspberry 
 ```bash
 $ ./certs.sh
 ```
-**or for manually creating use this instruction:**
+**or for manually creating use this instruction:**  
 You will need to create certificates for Janus, Nginx and PiBot. You can use the same certificate for PiBot and Nginx.
 To create a certificate, use the command:
 ```bash
