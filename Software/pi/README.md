@@ -1,6 +1,6 @@
 # PiBot on Raspberry Pi 
 This folder contains configs and scripts only for Raspbian running on Raspberry Pi.
-
+Download a ready-made image of the system with all components, you can [click here](https://drive.google.com/open?id=1pT9RW4nFCStsU0vx6Z_1Stj9euPi8H8o).
 ## Installing dependencies
 ---
 * [Janus WebRTC Gateway](https://github.com/ilyastrodubtsev/janus-gateway/tree/janus):
