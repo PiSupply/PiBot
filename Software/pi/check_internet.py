@@ -19,7 +19,10 @@ def checkConnection():
 
 def getIpAddress():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("google.com", 443))
+    try:
+        s.connect(("google.com", 443))
+    except socket.gaierror:
+        pass
     return s.getsockname()[0]
     # address = socket.gethostbyname(socket.gethostname())
     # return address
@@ -45,6 +48,17 @@ def updateConfig():
     config = readJson(PASS_TO_IP_CONFIG)
     config['ip'] = ipAddress
     writeJson(PASS_TO_IP_CONFIG,config)
+    
+def updateConfigWlan0():
+    config = readJson(PASS_TO_WEB_CONFIG)
+    m = os.popen('ifconfig wlan0 | grep "inet " | cut -c 14-27')
+    ipAddress = m.read().rstrip()
+    config['janus'] = "wss://%s:%s" % (ipAddress, JANUS_PORT)
+    config['joystick'] = "wss://%s:%s" % (ipAddress, JOYSTICK_PORT)
+    writeJson(PASS_TO_WEB_CONFIG,config)
+    config = readJson(PASS_TO_IP_CONFIG)
+    config['ip'] = ipAddress
+    writeJson(PASS_TO_IP_CONFIG,config)
 
 
 def checkCurrentIp():
@@ -54,9 +68,29 @@ def checkCurrentIp():
         return True
     else:
         return False
-
+    
+def checkWlan0Ip():
+    config = readJson(PASS_TO_IP_CONFIG)
+    m = os.popen('ifconfig wlan0 | grep "inet " | cut -c 14-27')
+    currentIp = m.read()
+    if config['ip'] == currentIp:
+        return True
+    else:
+        return False
+    
 
 if checkCurrentIp() == False and checkConnection() == True:
     updateConfig()
     os.system('systemctl restart nginx.service')
     os.system('systemctl restart robot.service')
+    os.system('systemctl restart avahi-pibot.service')
+    
+elif checkWlan0Ip() == False:
+    updateConfigWlan0()
+    os.system('systemctl restart nginx.service')
+    os.system('systemctl restart robot.service')
+    os.system('systemctl restart avahi-pibot.service')
+    
+else:
+    pass
+    
