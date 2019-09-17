@@ -91,6 +91,20 @@ When all dependencies are installed, run in this directory:
 ```bash
 $ ./robot.py
 ```
+### How to connect to PiBot
+---
+###### Сonnection to PiBot
+To connect to a robot, you must be on the same network with it.
+If you know his IP address, you just need to enter it in the address line.
+```
+https://$your_ip_adress
+```
+If you do not know the IP address, you can connect using avahi.
+```
+https://raspberrypi.local
+```
+**Doesn't work on android systems !!!**
+An application has been made for android devices that will help you connect, you can download it from the [link](https://drive.google.com/open?id=1JL8z7ZUA84ceC6PkDIPGZUPKcGe1cos0).
 ### PiBot image 
 ---
 If you are using a pre-built pibot assembly for raspberry pi, in this case scripts wifi.py, check_internet.py, and robot.py run by default along with the system, their autorun is controlled by systemd services wifi-connect.service, check_internet.service, robot.service. 
