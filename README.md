@@ -1,6 +1,6 @@
 # PiBot
 
-![rgb-pibot](https://user-images.githubusercontent.com/3359418/41306223-54354dcc-6e6d-11e8-8211-f912c7e3991b.png)
+![rgb-pibot](https://user-images.githubusercontent.com/1878314/73881370-197a7880-4858-11ea-928a-ddf8fc06d069.png)
 
 Resources for PiBot range
 
